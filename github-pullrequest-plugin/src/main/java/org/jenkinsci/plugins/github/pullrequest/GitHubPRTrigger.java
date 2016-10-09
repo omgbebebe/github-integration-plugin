@@ -11,6 +11,7 @@ import hudson.model.Job;
 import hudson.triggers.Trigger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.github.GitHubPlugin;
 import org.jenkinsci.plugins.github.pullrequest.events.GitHubPREvent;
 import org.jenkinsci.plugins.github.pullrequest.events.GitHubPREventDescriptor;
@@ -334,6 +335,7 @@ public class GitHubPRTrigger extends GitHubTrigger<GitHubPRTrigger> {
         return FINISH_MSG;
     }
 
+    @Symbol("githubPullRequest")
     @Extension
     public static class DescriptorImpl extends GitHubTriggerDescriptor {
 
