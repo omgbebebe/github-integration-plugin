@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.github.pullrequest;
 
 import antlr.ANTLRException;
 import com.cloudbees.jenkins.GitHubRepositoryName;
-import com.cloudbees.jenkins.GitHubWebHook;
 import com.github.kostyasha.github.integration.generic.GitHubTrigger;
 import com.github.kostyasha.github.integration.generic.GitHubTriggerDescriptor;
 import hudson.Extension;
@@ -11,7 +10,6 @@ import hudson.model.Job;
 import hudson.triggers.Trigger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.github.GitHubPlugin;
 import org.jenkinsci.plugins.github.pullrequest.events.GitHubPREvent;
 import org.jenkinsci.plugins.github.pullrequest.events.GitHubPREventDescriptor;
 import org.jenkinsci.plugins.github.pullrequest.restrictions.GitHubPRBranchRestriction;
@@ -159,12 +157,14 @@ public class GitHubPRTrigger extends GitHubTrigger<GitHubPRTrigger> {
     }
 
     @Override
-    public void start(Job<?, ?> project, boolean newInstance) {
-        LOGGER.info("Starting GitHub Pull Request trigger for project {}", project.getName());
-        super.start(project, newInstance);
+    public void start(Job<?, ?> job, boolean newInstance) {
+        LOGGER.info("Starting GitHub Pull Request trigger for project {}", job.getFullName());
+        super.start(job, newInstance);
 
-        if (newInstance && GitHubPlugin.configuration().isManageHooks() && withHookTriggerMode().apply(project)) {
-            GitHubWebHook.get().registerHookFor(project);
+        if (newInstance
+                && getRepoProvider().isManageHooks(getRepoFullName(job), job)
+                && withHookTriggerMode().apply(job)) {
+            getRepoProvider().registerHookFor(job);
         }
     }
 
@@ -195,12 +195,7 @@ public class GitHubPRTrigger extends GitHubTrigger<GitHubPRTrigger> {
      */
     public void queueRun(Job<?, ?> job, final int prNumber) {
         this.job = job;
-        getDescriptor().getQueue().execute(new Runnable() {
-            @Override
-            public void run() {
-                doRun(prNumber);
-            }
-        });
+        getDescriptor().getQueue().execute(() -> doRun(prNumber));
     }
 
     /**
