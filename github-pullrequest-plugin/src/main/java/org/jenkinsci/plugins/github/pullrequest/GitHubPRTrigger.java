@@ -33,7 +33,6 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -162,9 +161,9 @@ public class GitHubPRTrigger extends GitHubTrigger<GitHubPRTrigger> {
         super.start(job, newInstance);
 
         if (newInstance
-                && getRepoProvider().isManageHooks(getRepoFullName(job), job)
+                && getRepoProvider().isManageHooks(this)
                 && withHookTriggerMode().apply(job)) {
-            getRepoProvider().registerHookFor(job);
+            getRepoProvider().registerHookFor(this);
         }
     }
 
@@ -259,7 +258,8 @@ public class GitHubPRTrigger extends GitHubTrigger<GitHubPRTrigger> {
                                                    @Nonnull LoggingTaskListenerWrapper listener,
                                                    @Nullable Integer prNumber) {
         try {
-            GitHub github = DescriptorImpl.githubFor(localRepository.getGithubUrl().toURI());
+            GitHub github = getRepoProvider().getGitHub(this);
+
             GHRateLimit rateLimitBefore = github.getRateLimit();
             listener.debug("GitHub rate limit before check: {}", rateLimitBefore);
 
@@ -297,7 +297,7 @@ public class GitHubPRTrigger extends GitHubTrigger<GitHubPRTrigger> {
                     localRepository.getFullName(), rateLimitAfter, consumed, remotePulls.size());
 
             return causes;
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             listener.error("Can't get build causes: ", e);
             return Collections.emptyList();
         }

@@ -1,16 +1,14 @@
 package com.github.kostyasha.github.integration.generic;
 
-import com.cloudbees.jenkins.GitHubRepositoryName;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
-import hudson.model.Job;
 import jenkins.model.Jenkins;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 
-import javax.annotation.Nullable;
+import javax.annotation.CheckForNull;
 
 /**
  * Extension for providing GH connection for specified repository with job context.
@@ -21,27 +19,32 @@ import javax.annotation.Nullable;
 public abstract class GitHubRepoProvider extends AbstractDescribableImpl<GitHubRepoProvider>
         implements ExtensionPoint {
 
-    public abstract void registerHookFor(Job job);
+    /**
+     *
+     * @param trigger specific trigger type. Find by type what events wants trigger.
+     */
+    public abstract void registerHookFor(GitHubTrigger trigger);
 
     /**
      * Whether it allowed to manage hooks for certain job.
      */
-    public abstract boolean isManageHooks(GitHubRepositoryName name, Job job);
+    public abstract boolean isManageHooks(GitHubTrigger trigger);
 
     /**
      * Not used yet because trigger needs only GHRepository to work.
      */
-    @Nullable
-    public abstract GitHub getGitHub(GitHubRepositoryName name, Job job);
+    @CheckForNull
+    public abstract GitHub getGitHub(GitHubTrigger trigger);
 
     /**
      * alive connection to remote repo.
      */
-    @Nullable
-    public abstract GHRepository getRepo(GitHubRepositoryName name, Job job);
+    @CheckForNull
+    public abstract GHRepository getGHRepository(GitHubTrigger trigger);
 
     public abstract static class GitHubRepoProviderDescriptor
             extends Descriptor<GitHubRepoProvider> {
+        public abstract String getDisplayName();
 
         public static DescriptorExtensionList allRepoProviders() {
             return Jenkins.getActiveInstance().getDescriptorList(GitHubRepoProvider.class);

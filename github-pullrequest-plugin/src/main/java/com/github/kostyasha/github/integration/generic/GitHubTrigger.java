@@ -117,7 +117,7 @@ public abstract class GitHubTrigger<T extends GitHubTrigger<T>> extends Trigger<
     @Nonnull
     public GHRepository getRemoteRepository() throws IOException {
         if (isNull(remoteRepository)) {
-            remoteRepository = getRepoProvider().getRepo(getRepoFullName(job), job);
+            remoteRepository = getRepoProvider().getGHRepository(this);
             checkState(nonNull(remoteRepository), "Can't get remote GH repo for %s", job.getName());
         }
 
@@ -149,6 +149,10 @@ public abstract class GitHubTrigger<T extends GitHubTrigger<T>> extends Trigger<
     @CheckForNull
     public Job<?, ?> getJob() {
         return job;
+    }
+
+    public GitHubRepositoryName getRepoFullName() {
+        return getRepoFullName(getJob());
     }
 
     public GitHubRepositoryName getRepoFullName(Job<?, ?> job) {

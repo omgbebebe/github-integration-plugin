@@ -33,7 +33,6 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -50,7 +49,6 @@ import static com.google.common.base.Predicates.and;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Predicates.notNull;
 import static java.text.DateFormat.getDateTimeInstance;
-import static org.jenkinsci.plugins.github.pullrequest.GitHubPRTrigger.DescriptorImpl.githubFor;
 import static org.jenkinsci.plugins.github.pullrequest.GitHubPRTriggerMode.LIGHT_HOOKS;
 import static org.jenkinsci.plugins.github.pullrequest.utils.ObjectsUtil.isNull;
 import static org.jenkinsci.plugins.github.pullrequest.utils.ObjectsUtil.nonNull;
@@ -137,9 +135,9 @@ public class GitHubBranchTrigger extends GitHubTrigger<GitHubBranchTrigger> {
         LOG.info("Starting GitHub Branch trigger for project {}", job.getFullName());
         super.start(job, newInstance);
 
-        if (newInstance && getRepoProvider().isManageHooks(getRepoFullName(job), job) &&
+        if (newInstance && getRepoProvider().isManageHooks(this) &&
                 withHookTriggerMode().apply(job)) {
-            getRepoProvider().registerHookFor(job);
+            getRepoProvider().registerHookFor(this);
         }
     }
 
@@ -223,7 +221,7 @@ public class GitHubBranchTrigger extends GitHubTrigger<GitHubBranchTrigger> {
                                                        LoggingTaskListenerWrapper listener,
                                                        @Nullable String branch) {
         try {
-            GitHub github = githubFor(localRepository.getGithubUrl().toURI());
+            GitHub github = getRepoProvider().getGitHub(this);
             GHRateLimit rateLimitBefore = github.getRateLimit();
             listener.debug("GitHub rate limit before check: {}", rateLimitBefore);
 
@@ -256,7 +254,7 @@ public class GitHubBranchTrigger extends GitHubTrigger<GitHubBranchTrigger> {
                     localRepository.getFullName(), rateLimitAfter, consumed, remoteBranches.size());
 
             return causes;
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             listener.error("Can't get build causes: '{}'", e);
             return Collections.emptyList();
         }
